@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import { auth } from "@/firebase/config";
 
 const router = useRouter();
 
 const goHome = () => {
-  if (auth.currentUser) {
-    router.push("/");
-  } else {
-    router.push("/login");
-  }
+  router.push("/");
 };
 
 const goBack = () => {

@@ -1,36 +1,11 @@
-// main.ts
 import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
-import 'vuetify/styles'
-import '@mdi/font/css/materialdesignicons.css'
+import vuetify from './plugins/vuetify' // or import the config directly
 
-const vuetify = createVuetify({
-  components,
-  directives,
-  theme: {
-    defaultTheme: 'dark',
-    themes: {
-      light: {
-        colors: {
-          primary: '#00ACC1',
-          secondary: '#0288D1',
-          accent: '#4DD0E1',
-          error: '#E53935',
-          info: '#29B6F6',
-          success: '#66BB6A',
-          warning: '#FFA726',
-          background: '#F5F9FA',
-        },
-      },
-    },
-  },
-})
+const app = createApp(App)
 
-createApp(App)
-  .use(router)
-  .use(vuetify)
-  .mount('#app')
+app.use(router)
+app.use(vuetify)
+
+app.mount('#app')

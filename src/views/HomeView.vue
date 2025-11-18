@@ -1,273 +1,3 @@
-<template>
-  <v-container>
-    <v-card>
-      <v-card-title class="d-flex justify-space-between align-center">
-        <span>User Management</span>
-        <v-btn color="primary" @click="openCreateDialog">
-          <v-icon left>mdi-plus</v-icon>
-          Add User
-        </v-btn>
-      </v-card-title>
-
-      <v-card-text>
-        <v-text-field
-          v-model="search"
-          label="Search"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          clearable
-          hide-details
-          class="mb-4"
-        ></v-text-field>
-
-        <v-data-table
-          :headers="headers"
-          :items="filteredUsers"
-          :items-per-page="5"
-          class="elevation-1"
-        >
-          <template v-slot:header.name="{ column }">
-            <div class="d-flex align-center">
-              {{ column.title }}
-              <v-menu offset-y>
-                <template v-slot:activator="{ props }">
-                  <v-btn
-                    icon
-                    size="small"
-                    variant="text"
-                    v-bind="props"
-                    class="ml-1"
-                  >
-                    <v-icon size="small" :color="filters.name ? 'primary' : ''">
-                      mdi-filter-variant
-                    </v-icon>
-                  </v-btn>
-                </template>
-                <v-card min-width="200">
-                  <v-card-text>
-                    <v-text-field
-                      v-model="filters.name"
-                      label="Filter Name"
-                      density="compact"
-                      clearable
-                    ></v-text-field>
-                  </v-card-text>
-                </v-card>
-              </v-menu>
-            </div>
-          </template>
-
-          <template v-slot:header.email="{ column }">
-            <div class="d-flex align-center">
-              {{ column.title }}
-              <v-menu offset-y>
-                <template v-slot:activator="{ props }">
-                  <v-btn
-                    icon
-                    size="small"
-                    variant="text"
-                    v-bind="props"
-                    class="ml-1"
-                  >
-                    <v-icon
-                      size="small"
-                      :color="filters.email ? 'primary' : ''"
-                    >
-                      mdi-filter-variant
-                    </v-icon>
-                  </v-btn>
-                </template>
-                <v-card min-width="200">
-                  <v-card-text>
-                    <v-text-field
-                      v-model="filters.email"
-                      label="Filter Email"
-                      density="compact"
-                      clearable
-                    ></v-text-field>
-                  </v-card-text>
-                </v-card>
-              </v-menu>
-            </div>
-          </template>
-
-          <template v-slot:header.role="{ column }">
-            <div class="d-flex align-center">
-              {{ column.title }}
-              <v-menu offset-y>
-                <template v-slot:activator="{ props }">
-                  <v-btn
-                    icon
-                    size="small"
-                    variant="text"
-                    v-bind="props"
-                    class="ml-1"
-                  >
-                    <v-icon size="small" :color="filters.role ? 'primary' : ''">
-                      mdi-filter-variant
-                    </v-icon>
-                  </v-btn>
-                </template>
-                <v-card min-width="200">
-                  <v-card-text>
-                    <v-select
-                      v-model="filters.role"
-                      :items="roleOptions"
-                      label="Filter Role"
-                      density="compact"
-                      clearable
-                    ></v-select>
-                  </v-card-text>
-                </v-card>
-              </v-menu>
-            </div>
-          </template>
-
-          <template v-slot:header.status="{ column }">
-            <div class="d-flex align-center">
-              {{ column.title }}
-              <v-menu offset-y>
-                <template v-slot:activator="{ props }">
-                  <v-btn
-                    icon
-                    size="small"
-                    variant="text"
-                    v-bind="props"
-                    class="ml-1"
-                  >
-                    <v-icon
-                      size="small"
-                      :color="filters.status ? 'primary' : ''"
-                    >
-                      mdi-filter-variant
-                    </v-icon>
-                  </v-btn>
-                </template>
-                <v-card min-width="200">
-                  <v-card-text>
-                    <v-select
-                      v-model="filters.status"
-                      :items="['Active', 'Inactive']"
-                      label="Filter Status"
-                      density="compact"
-                      clearable
-                    ></v-select>
-                  </v-card-text>
-                </v-card>
-              </v-menu>
-            </div>
-          </template>
-
-          <template v-slot:item.actions="{ item }">
-            <v-icon
-              size="small"
-              class="me-2"
-              @click="openViewDialog(item)"
-              color="info"
-            >
-              mdi-eye
-            </v-icon>
-            <v-icon
-              size="small"
-              class="me-2"
-              @click="openEditDialog(item)"
-              color="primary"
-            >
-              mdi-pencil
-            </v-icon>
-            <v-icon size="small" @click="openDeleteDialog(item)" color="error">
-              mdi-delete
-            </v-icon>
-          </template>
-        </v-data-table>
-      </v-card-text>
-    </v-card>
-
-    <!-- Create/Edit Dialog -->
-    <v-dialog v-model="dialog" max-width="500px">
-      <v-card>
-        <v-card-title>
-          <span class="text-h5">{{ dialogTitle }}</span>
-        </v-card-title>
-        <v-card-text>
-          <v-container>
-            <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="editedUser.name"
-                  label="Name"
-                  :readonly="isViewMode"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="editedUser.email"
-                  label="Email"
-                  type="email"
-                  :readonly="isViewMode"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="editedUser.role"
-                  label="Role"
-                  :readonly="isViewMode"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-select
-                  v-model="editedUser.status"
-                  :items="['Active', 'Inactive']"
-                  label="Status"
-                  :readonly="isViewMode"
-                ></v-select>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="closeDialog">
-            {{ isViewMode ? "Close" : "Cancel" }}
-          </v-btn>
-          <v-btn
-            v-if="!isViewMode"
-            color="primary"
-            variant="text"
-            @click="saveUser"
-          >
-            Save
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="400px">
-      <v-card>
-        <v-card-title class="text-h5">Confirm Delete</v-card-title>
-        <v-card-text>
-          Are you sure you want to delete {{ userToDelete?.name }}?
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="deleteDialog = false">
-            Cancel
-          </v-btn>
-          <v-btn color="error" variant="text" @click="deleteUser">
-            Delete
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Snackbar for notifications -->
-    <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="3000">
-      {{ snackbarText }}
-    </v-snackbar>
-  </v-container>
-</template>
-
 <script setup lang="ts">
 import { ref, computed } from "vue";
 
@@ -537,3 +267,273 @@ const showSnackbar = (text: string, color: string) => {
   snackbar.value = true;
 };
 </script>
+
+<template>
+  <v-container>
+    <v-card>
+      <v-card-title class="d-flex justify-space-between align-center">
+        <span>User Management</span>
+        <v-btn color="primary" @click="openCreateDialog">
+          <v-icon left>mdi-plus</v-icon>
+          Add User
+        </v-btn>
+      </v-card-title>
+
+      <v-card-text>
+        <v-text-field
+          v-model="search"
+          label="Search"
+          prepend-inner-icon="mdi-magnify"
+          variant="outlined"
+          clearable
+          hide-details
+          class="mb-4"
+        ></v-text-field>
+
+        <v-data-table
+          :headers="headers"
+          :items="filteredUsers"
+          :items-per-page="5"
+          class="elevation-1"
+        >
+          <template v-slot:header.name="{ column }">
+            <div class="d-flex align-center">
+              {{ column.title }}
+              <v-menu offset-y>
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    v-bind="props"
+                    class="ml-1"
+                  >
+                    <v-icon size="small" :color="filters.name ? 'primary' : ''">
+                      mdi-filter-variant
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <v-card min-width="200">
+                  <v-card-text>
+                    <v-text-field
+                      v-model="filters.name"
+                      label="Filter Name"
+                      density="compact"
+                      clearable
+                    ></v-text-field>
+                  </v-card-text>
+                </v-card>
+              </v-menu>
+            </div>
+          </template>
+
+          <template v-slot:header.email="{ column }">
+            <div class="d-flex align-center">
+              {{ column.title }}
+              <v-menu offset-y>
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    v-bind="props"
+                    class="ml-1"
+                  >
+                    <v-icon
+                      size="small"
+                      :color="filters.email ? 'primary' : ''"
+                    >
+                      mdi-filter-variant
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <v-card min-width="200">
+                  <v-card-text>
+                    <v-text-field
+                      v-model="filters.email"
+                      label="Filter Email"
+                      density="compact"
+                      clearable
+                    ></v-text-field>
+                  </v-card-text>
+                </v-card>
+              </v-menu>
+            </div>
+          </template>
+
+          <template v-slot:header.role="{ column }">
+            <div class="d-flex align-center">
+              {{ column.title }}
+              <v-menu offset-y>
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    v-bind="props"
+                    class="ml-1"
+                  >
+                    <v-icon size="small" :color="filters.role ? 'primary' : ''">
+                      mdi-filter-variant
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <v-card min-width="200">
+                  <v-card-text>
+                    <v-select
+                      v-model="filters.role"
+                      :items="roleOptions"
+                      label="Filter Role"
+                      density="compact"
+                      clearable
+                    ></v-select>
+                  </v-card-text>
+                </v-card>
+              </v-menu>
+            </div>
+          </template>
+
+          <template v-slot:header.status="{ column }">
+            <div class="d-flex align-center">
+              {{ column.title }}
+              <v-menu offset-y>
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                    icon
+                    size="small"
+                    variant="text"
+                    v-bind="props"
+                    class="ml-1"
+                  >
+                    <v-icon
+                      size="small"
+                      :color="filters.status ? 'primary' : ''"
+                    >
+                      mdi-filter-variant
+                    </v-icon>
+                  </v-btn>
+                </template>
+                <v-card min-width="200">
+                  <v-card-text>
+                    <v-select
+                      v-model="filters.status"
+                      :items="['Active', 'Inactive']"
+                      label="Filter Status"
+                      density="compact"
+                      clearable
+                    ></v-select>
+                  </v-card-text>
+                </v-card>
+              </v-menu>
+            </div>
+          </template>
+
+          <template v-slot:item.actions="{ item }">
+            <v-icon
+              size="small"
+              class="me-2"
+              @click="openViewDialog(item)"
+              color="info"
+            >
+              mdi-eye
+            </v-icon>
+            <v-icon
+              size="small"
+              class="me-2"
+              @click="openEditDialog(item)"
+              color="primary"
+            >
+              mdi-pencil
+            </v-icon>
+            <v-icon size="small" @click="openDeleteDialog(item)" color="error">
+              mdi-delete
+            </v-icon>
+          </template>
+        </v-data-table>
+      </v-card-text>
+    </v-card>
+
+    <!-- Create/Edit Dialog -->
+    <v-dialog v-model="dialog" max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">{{ dialogTitle }}</span>
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="editedUser.name"
+                  label="Name"
+                  :readonly="isViewMode"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="editedUser.email"
+                  label="Email"
+                  type="email"
+                  :readonly="isViewMode"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="editedUser.role"
+                  label="Role"
+                  :readonly="isViewMode"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-select
+                  v-model="editedUser.status"
+                  :items="['Active', 'Inactive']"
+                  label="Status"
+                  :readonly="isViewMode"
+                ></v-select>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="text" @click="closeDialog">
+            {{ isViewMode ? "Close" : "Cancel" }}
+          </v-btn>
+          <v-btn
+            v-if="!isViewMode"
+            color="primary"
+            variant="text"
+            @click="saveUser"
+          >
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog v-model="deleteDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="text-h5">Confirm Delete</v-card-title>
+        <v-card-text>
+          Are you sure you want to delete {{ userToDelete?.name }}?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="text" @click="deleteDialog = false">
+            Cancel
+          </v-btn>
+          <v-btn color="error" variant="text" @click="deleteUser">
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar for notifications -->
+    <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="3000">
+      {{ snackbarText }}
+    </v-snackbar>
+  </v-container>
+</template>

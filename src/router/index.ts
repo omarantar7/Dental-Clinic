@@ -1,8 +1,6 @@
-// src/router/index.ts
 import { createRouter, createWebHistory } from "vue-router";
 import type { RouteRecordRaw } from "vue-router";
-import { auth } from "@/firebase/config";
-import { onAuthStateChanged } from "firebase/auth";
+import authService from "@/services/auth";
 
 // Define routes with their authentication requirements
 const routes: RouteRecordRaw[] = [
@@ -25,11 +23,29 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: "/patients/:pid",
+    name: "PatientDetails",
+    component: () => import("@/views/PatientDetails.vue"),
+    meta: {
+      requiresAuth: true,
+      title: "Patient Details - DentalCare Manager",
+    },
+  },
+  {
     path: "/:pathMatch(.*)*",
     name: "NotFound",
     component: () => import("@/views/NotFound.vue"),
     meta: {
       title: "404 Not Found - DentalCare Manager",
+    },
+  },
+  {
+    path: "/labs",
+    name: "Labs",
+    component: () => import("@/views/LabsView.vue"),
+    meta: {
+      requiresAuth: true,
+      title: "Labs - DentalCare Manager",
     },
   },
 ];
@@ -40,33 +56,44 @@ const router = createRouter({
   routes,
 });
 
-// Helper function to get current authenticated user
-const getCurrentUser = (): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    // Listen for auth state changes
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (user) => {
-        unsubscribe(); // Unsubscribe after getting the user
-        resolve(user);
-      },
-      reject
-    );
-  });
-};
-
+// Navigation guard for authentication
 router.beforeEach(async (to, from, next) => {
+  // Set page title
   document.title = (to.meta.title as string) || "DentalCare Manager";
 
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
-  const currentUser = auth.currentUser || (await getCurrentUser());
+  const token = authService.getToken();
 
-  if (requiresAuth && !currentUser) {
-    next({ name: "Login" });
-  } else if (to.name === "Login" && currentUser) {
-    next({ name: "Dashboard" });
+  // If route requires authentication
+  if (requiresAuth) {
+    if (!token) {
+      // No token, redirect to login
+      next({ name: "Login" });
+    } else {
+      // Token exists, verify it's valid
+      const isAuthenticated = await authService.isAuthenticated();
+
+      if (isAuthenticated) {
+        next();
+      } else {
+        // Token is invalid, redirect to login
+        next({ name: "Login" });
+      }
+    }
   } else {
-    next();
+    // Route doesn't require auth
+    if (to.name === "Login" && token) {
+      // User is already logged in, redirect to dashboard
+      const isAuthenticated = await authService.isAuthenticated();
+
+      if (isAuthenticated) {
+        next({ name: "Dashboard" });
+      } else {
+        next();
+      }
+    } else {
+      next();
+    }
   }
 });
 

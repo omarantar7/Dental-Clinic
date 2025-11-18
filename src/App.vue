@@ -1,65 +1,62 @@
-<!-- src/App.vue -->
+<script setup lang="ts">
+import { computed } from "vue";
+import { useRoute } from "vue-router";
+import { useAuth } from "@/composables/useAuth";
+import AppLayout from "@/components/AppLayout.vue";
+
+const route = useRoute();
+const { isAuthenticated } = useAuth();
+
+const noLayoutPages = computed(() => {
+  return route.meta.requiresAuth === false || route.name === "NotFound";
+});
+</script>
+
 <template>
   <v-app>
-    <router-view />
+    <AppLayout v-if="isAuthenticated && !noLayoutPages">
+      <router-view />
+    </AppLayout>
+
+    <router-view v-else />
   </v-app>
 </template>
 
-<script setup lang="ts">
-// App.vue is the root component
-// It wraps everything in v-app (required by Vuetify)
-// router-view renders the current route component (LoginView, DashboardView, or NotFound)
-</script>
-
 <style>
-/* Global styles */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
 html,
 body {
   height: 100%;
   overflow-x: hidden;
 }
-
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
-
-/* Custom scrollbar for webkit browsers */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
-
 ::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
-
 ::-webkit-scrollbar-thumb {
   background: #00acc1;
   border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: #0288d1;
 }
-
-/* Vuetify overrides for consistent spacing */
 .v-application {
   font-family: "Roboto", sans-serif !important;
 }
-
-/* Loading transition */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;

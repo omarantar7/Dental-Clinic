@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/firebase/config";
+import authService from "@/services/auth";
 
 const router = useRouter();
 const form = ref();
@@ -31,21 +30,30 @@ const handleLogin = async () => {
   errorMessage.value = "";
 
   try {
-    await signInWithEmailAndPassword(auth, email.value, password.value);
+    await authService.login(email.value, password.value);
     router.push("/");
   } catch (error: any) {
     console.error("Login error:", error);
 
-    switch (error.code) {
-      case "auth/user-not-found":
-      case "auth/wrong-password":
+    // Handle Laravel validation errors
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+
+      if (status === 422) {
+        // Validation error
+        errorMessage.value =
+          data.errors?.email?.[0] || "Invalid email or password";
+      } else if (status === 401) {
         errorMessage.value = "Invalid email or password";
-        break;
-      case "auth/too-many-requests":
+      } else if (status === 429) {
         errorMessage.value = "Too many attempts. Please try again later";
-        break;
-      default:
-        errorMessage.value = "An error occurred. Please try again";
+      } else {
+        errorMessage.value =
+          data.message || "An error occurred. Please try again";
+      }
+    } else {
+      errorMessage.value = "Network error. Please check your connection";
     }
   } finally {
     loading.value = false;
@@ -146,13 +154,11 @@ const handleLogin = async () => {
 
 <style scoped>
 .login-bg {
-  /* background: linear-gradient(135deg, #00acc1 0%, #0288d1 100%); */
   min-height: 100vh;
 }
 
 .login-card {
   backdrop-filter: blur(10px);
-  /* background: rgba(255, 255, 255, 0.95) !important; */
 }
 
 .v-avatar {
